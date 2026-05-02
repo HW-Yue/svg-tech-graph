@@ -97,12 +97,13 @@ node ./scripts/route-diagram.mjs ./fixtures/mq-routing.json > /tmp/mq-routed.jso
 4. **Load visual reference** — always load `references/default-visual-system.md` for exact color tokens and SVG patterns
 5. **Map nodes to shapes** — use Shape Vocabulary below
 6. **Check icon needs** — load `references/icons.md` for known products
-7. **Write SVG** with adaptive strategy (see SVG Generation Strategy below)
-8. **Route complex node-edge diagrams**: set `auto_layout: true` or `routing.engine: "elk"` for complex architecture, data-flow, MQ, or service dependency diagrams
-9. **Validate**: Run `rsvg-convert file.svg -o /dev/null 2>&1` to check syntax
-10. **Export PNG**: `rsvg-convert -w 1920 file.svg -o file.png`
-11. **Report** the generated file paths
-12. **(Optional) Visual self-review** — if your runtime can read images, load the exported PNG back and inspect it. Syntactic validity does not guarantee visual correctness: arrows may cross through component interiors, labels may collide with lifelines or other labels, boxes may overlap, alt-frame text may sit on top of a message, or a legend may cover content. If you see any of these, revise the SVG and re-export; repeat until the rendered image is clean. Common fixes:
+7. **Build diagram JSON first** — use nodes, arrows, containers, legend, and routing fields (see JSON-Driven Generation below)
+8. **Generate SVG from JSON**: run `python3 scripts/generate-from-template.py <template-type> <output.svg> '<json>'`
+9. **Route complex node-edge diagrams**: set `auto_layout: true` or `routing.engine: "elk"` for architecture, data-flow, MQ, and service dependency diagrams
+10. **Validate**: Run `rsvg-convert file.svg -o /dev/null 2>&1` to check syntax
+11. **Export PNG**: `rsvg-convert -w 1920 file.svg -o file.png`
+12. **Report** the generated file paths
+13. **(Optional) Visual self-review** — if your runtime can read images, load the exported PNG back and inspect it. Syntactic validity does not guarantee visual correctness: arrows may cross through component interiors, labels may collide with lifelines or other labels, boxes may overlap, alt-frame text may sit on top of a message, or a legend may cover content. If you see any of these, revise the JSON/routing fields, regenerate, and re-export; repeat until the rendered image is clean. Common fixes:
     - Route arrows through gaps between boxes, not through box interiors
     - Add background rects behind arrow labels (opacity 0.95, matching canvas color)
     - Widen inter-row/inter-column gutters so same-layer arrows have clear corridors
@@ -306,6 +307,101 @@ Map semantic concepts to consistent shapes across all diagram types:
 | External Service | Rect with cloud icon or dashed border | |
 | Data / Artifact | Parallelogram | I/O in flowcharts |
 
+## JSON-Driven Generation (Default Path)
+
+For most diagrams, especially architecture, data-flow, MQ, service dependency, agent, memory, and flow diagrams, **build structured JSON first and render it with `generate-from-template.py`**. Do not default to hand-written SVG coordinates.
+
+Use this minimum shape:
+
+```json
+{
+  "template_type": "architecture",
+  "auto_layout": true,
+  "routing": {
+    "engine": "elk",
+    "direction": "RIGHT",
+    "edgeRouting": "ORTHOGONAL"
+  },
+  "title": "Diagram Title",
+  "subtitle": "Optional short context",
+  "nodes": [
+    {
+      "id": "producer",
+      "kind": "rect",
+      "width": 200,
+      "height": 64,
+      "label": "Producer",
+      "type_label": "SERVICE"
+    },
+    {
+      "id": "topic",
+      "kind": "rect",
+      "width": 220,
+      "height": 58,
+      "label": "topic-name",
+      "type_label": "TOPIC"
+    }
+  ],
+  "arrows": [
+    {
+      "source": "producer",
+      "target": "topic",
+      "flow": "data",
+      "label": "publish"
+    }
+  ],
+  "legend": [
+    { "flow": "data", "label": "Published message" }
+  ]
+}
+```
+
+Generate the SVG:
+
+```bash
+python3 ./scripts/generate-from-template.py architecture ./output/diagram.svg '<json>'
+```
+
+Export PNG:
+
+```bash
+rsvg-convert -w 1920 ./output/diagram.svg -o ./output/diagram.png
+```
+
+### When To Enable ELK Routing
+
+Set `auto_layout: true` or `routing.engine: "elk"` when a diagram has more than a few connected nodes, repeated arrows, callbacks, loops, or multiple layers. This is the default for MQ diagrams and service dependency diagrams.
+
+Recommended routing defaults:
+
+```json
+"routing": {
+  "engine": "elk",
+  "direction": "RIGHT",
+  "edgeRouting": "ORTHOGONAL",
+  "spacing": {
+    "nodeNode": 80,
+    "edgeNode": 44,
+    "edgeEdge": 24,
+    "layer": 120
+  }
+}
+```
+
+Use `direction: "RIGHT"` for MQ and request chains. Use `direction: "DOWN"` for top-to-bottom flows.
+
+### JSON Authoring Rules
+
+- Always give every node a stable `id`; arrows should use `source` and `target`, not raw `x1/y1/x2/y2`.
+- Prefer explicit `width` and `height` for every node so ELK can route with real component bounds.
+- Use `flow` for semantics: `data`, `read`, `write`, `control`, `async`, `feedback`, or `neutral`.
+- Use `route_points` only when you intentionally need a custom path; otherwise let ELK create `routed_points`.
+- Keep labels short; put implementation details in `sublabel`, `type_label`, or the surrounding explanation.
+
+### When Direct SVG Is Acceptable
+
+Direct SVG is only the fallback for very small static diagrams, custom icons, special curved illustrations, or cases where the JSON renderer cannot express the required shape. If direct SVG is used, follow the Python list method below.
+
 ## Arrow Semantics
 
 Always assign arrow meaning, not just color:
@@ -364,9 +460,11 @@ When two arrows must cross each other, ALWAYS use jump-over arcs to prevent visu
 - Curved paths: use `M x1,y1 C cx1,cy1 cx2,cy2 x2,y2` cubic bezier for loops/feedback arrows
 - Clip content: use `<clipPath>` if text might overflow a node box
 
-## SVG Generation & Error Prevention
+## Direct SVG Fallback & Error Prevention
 
-**MANDATORY: Python List Method** (ALWAYS use this):
+Use direct SVG only for the fallback cases described above. For normal technical diagrams, use JSON-driven generation first.
+
+**MANDATORY for direct SVG fallback: Python List Method**:
 ```python
 python3 << 'EOF'
 lines = []
@@ -381,7 +479,7 @@ print("SVG generated successfully")
 EOF
 ```
 
-**Why mandatory**: Prevents character truncation, typos, and syntax errors. Each line is independent and easy to verify.
+**Why this fallback method**: Prevents character truncation, typos, and syntax errors when direct SVG is unavoidable. Each line is independent and easy to verify.
 
 **Pre-Tool-Call Checklist** (CRITICAL - use EVERY time):
 1. ✅ Can I write out the COMPLETE command/content right now?
@@ -401,10 +499,10 @@ EOF
 rsvg-convert file.svg -o /tmp/test.png 2>&1 && echo "✓ Valid" && rm /tmp/test.png
 ```
 
-**If using `generate-from-template.py`**:
+**When using `generate-from-template.py`**:
 - Prefer `source` / `target` node ids in arrow JSON so the generator can snap to node edges
 - Keep `x1,y1,x2,y2` as hints or fallback coordinates, not the main routing primitive
-- Let the generator choose orthogonal routes; avoid hardcoding center-to-center straight lines unless the path is guaranteed clear
+- Let ELK or the generator choose orthogonal routes; avoid hardcoding center-to-center straight lines unless the path is guaranteed clear
 
 **Common Syntax Errors to Avoid**:
 - ❌ `yt-anchor` → ✅ `y="60" text-anchor="middle"`
