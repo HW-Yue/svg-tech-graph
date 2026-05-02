@@ -8,7 +8,7 @@ description: >-
   system/flow description the user wants illustrated.
 ---
 
-# Fireworks Tech Graph
+# SVG Tech Graph
 
 Generate production-quality SVG technical diagrams exported as PNG via `rsvg-convert`.
 

@@ -15,7 +15,7 @@ SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEST_DIR="${SKILL_DIR}/test-output"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
-echo -e "${BLUE}=== Fireworks Tech Graph - Default Visual System Regression Test ===${NC}"
+echo -e "${BLUE}=== SVG Tech Graph - Default Visual System Regression Test ===${NC}"
 echo "Test directory: $TEST_DIR"
 echo "Timestamp: $TIMESTAMP"
 echo ""
