@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1080" viewBox="0 0 1440 1080" role="img" aria-labelledby="title desc">
+  <title id="title">Spring Boot Startup Flow MOC</title>
+  <desc id="desc">A vertical flow diagram for Spring Boot startup stages from entry to runtime callbacks.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8f6f1; }
+      .title { font: 700 28px "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #2f2b27; letter-spacing: 0; }
+      .label { font: 600 20px "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #2f2b27; letter-spacing: 0; }
+      .small { font: 500 16px "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #4a433d; letter-spacing: 0; }
+      .box { fill: #ffffff; stroke: #cfc4b8; stroke-width: 2; rx: 16; ry: 16; }
+      .stage { fill: #fffaf3; stroke: #d8ccb7; stroke-width: 2; rx: 18; ry: 18; }
+      .line { stroke: #8c6d4e; stroke-width: 3; fill: none; }
+      .thin { stroke: #b9aa97; stroke-width: 2; fill: none; }
+      .accent { fill: #d48b4b; }
+      .legend { fill: #f3eadc; stroke: #dcc9b0; stroke-width: 1.5; rx: 10; ry: 10; }
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#8c6d4e"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1440" height="980"/>
+  <text class="title" x="80" y="70">SpringBoot启动流程MOC</text>
+  <text class="small" x="80" y="102">阶段化容器编排：入口、环境、上下文、refresh、自动装配、Bean、Web、回调</text>
+
+  <rect class="stage" x="120" y="150" width="1200" height="95"/>
+  <text class="label" x="160" y="190">1. 启动入口</text>
+  <rect class="box" x="430" y="168" width="300" height="48"/>
+  <text class="small" x="462" y="198">[[SpringApplication运行入口]]</text>
+  <path class="line" d="M290 192 L428 192" marker-end="url(#arrow)"/>
+  <text class="small" x="770" y="198">run() 先组装启动元信息，再进入后续阶段</text>
+
+  <rect class="stage" x="120" y="275" width="1200" height="95"/>
+  <text class="label" x="160" y="315">2. Environment 准备</text>
+  <rect class="box" x="430" y="293" width="300" height="48"/>
+  <text class="small" x="480" y="323">[[Environment准备]]</text>
+  <path class="line" d="M570 245 L570 293" marker-end="url(#arrow)"/>
+  <text class="small" x="770" y="323">把配置文件、参数和环境变量合成最终视图</text>
+
+  <rect class="stage" x="120" y="400" width="1200" height="95"/>
+  <text class="label" x="160" y="440">3. ApplicationContext 创建</text>
+  <rect class="box" x="430" y="418" width="300" height="48"/>
+  <text class="small" x="468" y="448">[[ApplicationContext创建]]</text>
+  <path class="line" d="M570 370 L570 418" marker-end="url(#arrow)"/>
+  <text class="small" x="770" y="448">根据应用类型选择上下文实现</text>
+
+  <rect class="stage" x="120" y="525" width="1200" height="110"/>
+  <text class="label" x="160" y="566">4. refresh 主流程</text>
+  <rect class="box" x="380" y="543" width="210" height="48"/>
+  <text class="small" x="397" y="573">[[refresh流程]]</text>
+  <rect class="box" x="620" y="543" width="340" height="48"/>
+  <text class="small" x="640" y="573">[[ConfigurationClassPostProcessor]]</text>
+  <path class="line" d="M570 495 L570 543" marker-end="url(#arrow)"/>
+  <path class="thin" d="M590 567 L618 567" marker-end="url(#arrow)"/>
+  <text class="small" x="980" y="573">配置类解析、组件扫描、BeanDefinition 注册</text>
+
+  <rect class="stage" x="120" y="665" width="1200" height="95"/>
+  <text class="label" x="160" y="705">5. 自动装配</text>
+  <rect class="box" x="430" y="683" width="300" height="48"/>
+  <text class="small" x="468" y="713">[[自动装配原理]]</text>
+  <path class="line" d="M570 635 L570 683" marker-end="url(#arrow)"/>
+  <text class="small" x="770" y="713">条件判断决定哪些配置真正生效</text>
+
+  <rect class="stage" x="120" y="790" width="1200" height="95"/>
+  <text class="label" x="160" y="830">6. Bean 生命周期</text>
+  <rect class="box" x="430" y="808" width="300" height="48"/>
+  <text class="small" x="505" y="838">[[Bean生命周期]]</text>
+  <path class="line" d="M570 760 L570 808" marker-end="url(#arrow)"/>
+  <text class="small" x="770" y="838">实例化、初始化、销毁和回调都在这里展开</text>
+
+  <rect class="stage" x="120" y="915" width="1200" height="95"/>
+  <text class="label" x="160" y="955">7. Web 容器与启动后回调</text>
+  <rect class="box" x="430" y="933" width="270" height="48"/>
+  <text class="small" x="452" y="963">[[内嵌Web容器启动]]</text>
+  <rect class="box" x="735" y="933" width="230" height="48"/>
+  <text class="small" x="782" y="963">[[启动后回调]]</text>
+  <path class="line" d="M570 885 L570 933" marker-end="url(#arrow)"/>
+  <path class="thin" d="M700 957 L733 957" marker-end="url(#arrow)"/>
+  <text class="small" x="995" y="963">Tomcat/Jetty/Undertow 与 Runner / Listener 收口</text>
+
+  <rect class="legend" x="1120" y="40" width="240" height="44"/>
+  <text class="small" x="1142" y="68">Legend: startup stages</text>
+</svg>

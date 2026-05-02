@@ -1,0 +1,42 @@
+{
+  "name": "@hw-yue/svg-tech-graph",
+  "version": "1.0.4",
+  "description": "Generate production-quality SVG technical diagrams in the built-in default visual system and export as SVG+PNG via rsvg-convert.",
+  "main": "SKILL.md",
+  "keywords": [
+    "claude-code",
+    "skill",
+    "diagram",
+    "svg",
+    "architecture",
+    "flowchart",
+    "uml",
+    "sequence-diagram",
+    "er-diagram",
+    "visualization"
+  ],
+  "author": "HW-Yue",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HW-Yue/svg-tech-graph.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HW-Yue/svg-tech-graph/issues"
+  },
+  "homepage": "https://github.com/HW-Yue/svg-tech-graph#readme",
+  "files": [
+    "SKILL.md",
+    "README.md",
+    "README.zh.md",
+    "LICENSE",
+    "references/",
+    "scripts/",
+    "fixtures/",
+    "templates/",
+    "assets/"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
