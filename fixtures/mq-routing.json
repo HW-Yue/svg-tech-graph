@@ -1,0 +1,63 @@
+{
+  "template_type": "architecture",
+  "auto_layout": true,
+  "routing": {
+    "engine": "elk",
+    "direction": "RIGHT",
+    "edgeRouting": "ORTHOGONAL",
+    "spacing": {
+      "nodeNode": 80,
+      "edgeNode": 44,
+      "edgeEdge": 24,
+      "layer": 120
+    },
+    "marginX": 72,
+    "marginY": 118
+  },
+  "style_overrides": {
+    "title_align": "center"
+  },
+  "title": "MQ Routing Regression",
+  "subtitle": "Producer, topic, consumer, and callback edges routed by ELK",
+  "nodes": [
+    { "id": "pay_service", "kind": "rect", "width": 210, "height": 66, "label": "pay-service", "type_label": "PRODUCER", "fill": "#e9f1fb", "stroke": "#8c6f5a", "flat": true },
+    { "id": "order_service", "kind": "rect", "width": 220, "height": 66, "label": "order-service", "type_label": "SERVICE", "fill": "#e9f1fb", "stroke": "#8c6f5a", "flat": true },
+    { "id": "group_buy_service", "kind": "rect", "width": 230, "height": 66, "label": "group-buy-service", "type_label": "SERVICE", "fill": "#e9f1fb", "stroke": "#8c6f5a", "flat": true },
+    { "id": "pay_success_normal", "kind": "rect", "width": 230, "height": 58, "label": "pay-success-normal", "type_label": "TOPIC", "fill": "#f7ecda", "stroke": "#d0b893", "flat": true },
+    { "id": "pay_success_group", "kind": "rect", "width": 240, "height": 58, "label": "pay-success-group-buy", "type_label": "TOPIC", "fill": "#f7ecda", "stroke": "#d0b893", "flat": true },
+    { "id": "order_paid_group", "kind": "rect", "width": 230, "height": 58, "label": "order-paid-group_buy", "type_label": "TOPIC", "fill": "#f7ecda", "stroke": "#d0b893", "flat": true },
+    { "id": "success_notify", "kind": "rect", "width": 260, "height": 58, "label": "group-buy-success-notify", "type_label": "TOPIC", "fill": "#f7ecda", "stroke": "#d0b893", "flat": true },
+    { "id": "timeout_refund", "kind": "rect", "width": 250, "height": 58, "label": "group-buy-timeout-refund", "type_label": "TIMER", "fill": "#f7ecda", "stroke": "#d97757", "flat": true },
+    { "id": "order_close_group", "kind": "rect", "width": 240, "height": 58, "label": "order-close-group-buy", "type_label": "TOPIC", "fill": "#f7ecda", "stroke": "#d0b893", "flat": true },
+    { "id": "refund_request", "kind": "rect", "width": 240, "height": 58, "label": "pay-refund-group-buy", "type_label": "TOPIC", "fill": "#f7ecda", "stroke": "#d0b893", "flat": true },
+    { "id": "refund_result", "kind": "rect", "width": 260, "height": 58, "label": "pay-refund-group-buy-result", "type_label": "TOPIC", "fill": "#f7ecda", "stroke": "#7b8b5c", "flat": true },
+    { "id": "normal_order_listener", "kind": "rect", "width": 240, "height": 66, "label": "PaySuccessListener", "type_label": "CONSUMER", "fill": "#c8e4db", "stroke": "#8c6f5a", "flat": true },
+    { "id": "ship_task", "kind": "rect", "width": 220, "height": 66, "label": "order-ship-task", "type_label": "ASYNC JOB", "fill": "#efe8de", "stroke": "#d0c3b3", "flat": true }
+  ],
+  "arrows": [
+    { "source": "pay_service", "target": "pay_success_normal", "flow": "data", "label": "paid normal" },
+    { "source": "pay_success_normal", "target": "normal_order_listener", "flow": "read", "label": "consume" },
+    { "source": "pay_service", "target": "pay_success_group", "flow": "data", "label": "paid group" },
+    { "source": "pay_success_group", "target": "order_service", "flow": "read", "label": "handlePaySuccess" },
+    { "source": "order_service", "target": "order_paid_group", "flow": "control", "label": "tx message" },
+    { "source": "order_paid_group", "target": "group_buy_service", "flow": "read", "label": "settle team" },
+    { "source": "group_buy_service", "target": "success_notify", "flow": "data", "label": "team success" },
+    { "source": "success_notify", "target": "order_service", "flow": "feedback", "dashed": true, "label": "notify order" },
+    { "source": "order_service", "target": "ship_task", "flow": "async", "label": "ship task" },
+    { "source": "timeout_refund", "target": "group_buy_service", "flow": "control", "dashed": true, "label": "timeout" },
+    { "source": "group_buy_service", "target": "order_close_group", "flow": "control", "label": "close unpaid" },
+    { "source": "group_buy_service", "target": "refund_request", "flow": "write", "label": "refund paid" },
+    { "source": "refund_request", "target": "pay_service", "flow": "read", "label": "refund" },
+    { "source": "pay_service", "target": "refund_result", "flow": "feedback", "dashed": true, "label": "result" },
+    { "source": "refund_result", "target": "order_service", "flow": "read", "label": "writeback" }
+  ],
+  "legend": [
+    { "flow": "data", "label": "Published message" },
+    { "flow": "read", "label": "Consumer handling" },
+    { "flow": "feedback", "label": "Callback / writeback" }
+  ],
+  "legend_position": "bottom-right",
+  "legend_box": true,
+  "legend_box_fill": "#fffaf3",
+  "footer": ""
+}

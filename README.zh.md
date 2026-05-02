@@ -87,6 +87,29 @@ python3 ./scripts/generate-from-template.py architecture ./output/arch.svg '{
 }'
 ```
 
+### 使用 ELK 自动布线
+
+```bash
+npm install
+node ./scripts/route-diagram.mjs ./fixtures/mq-routing.json > /tmp/mq-routed.json
+python3 ./scripts/generate-from-template.py architecture ./output/mq.svg "$(cat /tmp/mq-routed.json)"
+```
+
+也可以在 JSON 中设置：
+
+```json
+{
+  "auto_layout": true,
+  "routing": {
+    "engine": "elk",
+    "direction": "RIGHT",
+    "edgeRouting": "ORTHOGONAL"
+  }
+}
+```
+
+这时 `generate-from-template.py` 会自动调用 ELK 路由，并把结果作为 SVG 渲染输入。
+
 ### 运行回归测试
 
 ```bash
@@ -107,11 +130,13 @@ svg-tech-graph/
 │   ├── default-visual-system.md
 │   └── svg-layout-best-practices.md
 ├── fixtures/
-│   └── system-architecture-default.json
+│   ├── system-architecture-default.json
+│   └── mq-routing.json
 ├── scripts/
 │   ├── README.md
 │   ├── generate-diagram.sh
 │   ├── generate-from-template.py
+│   ├── route-diagram.mjs
 │   ├── test-default-visual-system.sh
 │   └── validate-svg.sh
 ├── templates/
@@ -123,5 +148,6 @@ svg-tech-graph/
 ## 说明
 
 - `generate-from-template.py` 始终使用内建默认视觉系统
+- `route-diagram.mjs` 使用 ELK 为节点边图补齐节点坐标和正交边路径
 - `generate-diagram.sh` 不再依赖 style 选择；旧的 `-s/--style` 仅为兼容保留并会被忽略
 - 多风格参考矩阵已经移除

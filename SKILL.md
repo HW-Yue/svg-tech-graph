@@ -30,7 +30,7 @@ npx skills add HW-Yue/svg-tech-graph --force -g -y
 
 ## Helper Scripts (Recommended)
 
-Four helper scripts in `scripts/` directory provide stable SVG generation and validation:
+Five helper scripts in `scripts/` directory provide stable SVG generation, routing, and validation:
 
 ### 1. `generate-diagram.sh` - Validate SVG + export PNG
 ```bash
@@ -48,7 +48,16 @@ python3 ./scripts/generate-from-template.py architecture ./output/arch.svg '{"ti
 - Renders nodes, arrows, and legend entries from JSON input
 - Escapes text content to keep output XML-valid
 
-### 3. `validate-svg.sh` - Validate SVG syntax
+### 3. `route-diagram.mjs` - Auto-layout and route node-edge diagrams
+```bash
+node ./scripts/route-diagram.mjs ./fixtures/mq-routing.json > /tmp/mq-routed.json
+```
+- Uses ELK layered layout with orthogonal edge routing
+- Reads the existing JSON diagram structure
+- Writes JSON with computed `x`, `y`, `source_port`, `target_port`, and `routed_points`
+- Requires `npm install`
+
+### 4. `validate-svg.sh` - Validate SVG syntax
 ```bash
 ./scripts/validate-svg.sh <svg-file>
 ```
@@ -58,7 +67,7 @@ python3 ./scripts/generate-from-template.py architecture ./output/arch.svg '{"ti
 - Checks attribute completeness
 - Validates path data
 
-### 4. `test-default-visual-system.sh` - default visual system regression test
+### 5. `test-default-visual-system.sh` - default visual system regression test
 ```bash
 ./scripts/test-default-visual-system.sh
 ```
@@ -85,10 +94,11 @@ python3 ./scripts/generate-from-template.py architecture ./output/arch.svg '{"ti
 5. **Map nodes to shapes** — use Shape Vocabulary below
 6. **Check icon needs** — load `references/icons.md` for known products
 7. **Write SVG** with adaptive strategy (see SVG Generation Strategy below)
-8. **Validate**: Run `rsvg-convert file.svg -o /dev/null 2>&1` to check syntax
-9. **Export PNG**: `rsvg-convert -w 1920 file.svg -o file.png`
-10. **Report** the generated file paths
-11. **(Optional) Visual self-review** — if your runtime can read images, load the exported PNG back and inspect it. Syntactic validity does not guarantee visual correctness: arrows may cross through component interiors, labels may collide with lifelines or other labels, boxes may overlap, alt-frame text may sit on top of a message, or a legend may cover content. If you see any of these, revise the SVG and re-export; repeat until the rendered image is clean. Common fixes:
+8. **Route complex node-edge diagrams**: set `auto_layout: true` or `routing.engine: "elk"` for complex architecture, data-flow, MQ, or service dependency diagrams
+9. **Validate**: Run `rsvg-convert file.svg -o /dev/null 2>&1` to check syntax
+10. **Export PNG**: `rsvg-convert -w 1920 file.svg -o file.png`
+11. **Report** the generated file paths
+12. **(Optional) Visual self-review** — if your runtime can read images, load the exported PNG back and inspect it. Syntactic validity does not guarantee visual correctness: arrows may cross through component interiors, labels may collide with lifelines or other labels, boxes may overlap, alt-frame text may sit on top of a message, or a legend may cover content. If you see any of these, revise the SVG and re-export; repeat until the rendered image is clean. Common fixes:
     - Route arrows through gaps between boxes, not through box interiors
     - Add background rects behind arrow labels (opacity 0.95, matching canvas color)
     - Widen inter-row/inter-column gutters so same-layer arrows have clear corridors

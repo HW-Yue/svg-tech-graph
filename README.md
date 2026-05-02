@@ -87,6 +87,27 @@ python3 ./scripts/generate-from-template.py architecture ./output/arch.svg '{
 }'
 ```
 
+### Auto-route with ELK
+
+```bash
+npm install
+node ./scripts/route-diagram.mjs ./fixtures/mq-routing.json > /tmp/mq-routed.json
+python3 ./scripts/generate-from-template.py architecture ./output/mq.svg "$(cat /tmp/mq-routed.json)"
+```
+
+Or set this in the input JSON and let `generate-from-template.py` invoke the router automatically:
+
+```json
+{
+  "auto_layout": true,
+  "routing": {
+    "engine": "elk",
+    "direction": "RIGHT",
+    "edgeRouting": "ORTHOGONAL"
+  }
+}
+```
+
 ### Run regression test
 
 ```bash
@@ -107,11 +128,13 @@ svg-tech-graph/
 │   ├── default-visual-system.md
 │   └── svg-layout-best-practices.md
 ├── fixtures/
-│   └── system-architecture-default.json
+│   ├── system-architecture-default.json
+│   └── mq-routing.json
 ├── scripts/
 │   ├── README.md
 │   ├── generate-diagram.sh
 │   ├── generate-from-template.py
+│   ├── route-diagram.mjs
 │   ├── test-default-visual-system.sh
 │   └── validate-svg.sh
 ├── templates/
@@ -123,5 +146,6 @@ svg-tech-graph/
 ## Notes
 
 - `generate-from-template.py` always uses the built-in default visual system.
+- `route-diagram.mjs` uses ELK to add node positions and routed orthogonal edge points for node-edge diagrams.
 - `generate-diagram.sh` no longer depends on style selection; any legacy `-s/--style` input is ignored for compatibility.
 - The multi-style reference matrix has been removed.

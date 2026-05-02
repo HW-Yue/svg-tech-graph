@@ -17,6 +17,8 @@ import json
 import math
 import os
 import re
+import shutil
+import subprocess
 import sys
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
@@ -612,6 +614,19 @@ def build_orthogonal_route(
     return simplify_points([start, inner_start, (eex, ssy), inner_end, end])
 
 
+def points_from_data(value: object) -> List[Point]:
+    if not isinstance(value, list):
+        return []
+    points: List[Point] = []
+    for point in value:
+        if not isinstance(point, list) and not isinstance(point, tuple):
+            return []
+        if len(point) != 2:
+            return []
+        points.append((to_float(point[0]), to_float(point[1])))
+    return simplify_points(points)
+
+
 def choose_label_position(points: Sequence[Point]) -> Point:
     segments = list(zip(points, points[1:]))
     if not segments:
@@ -1056,25 +1071,29 @@ def render_arrow(
     source_port = arrow.get("source_port")
     target_port = arrow.get("target_port")
 
-    if source_node is not None:
-        toward = end_hint if target_node is None else (target_node.cx, target_node.cy)
-        start = anchor_point(source_node, toward, str(source_port) if source_port else None)
+    routed_points = points_from_data(arrow.get("routed_points"))
+    if len(routed_points) >= 2:
+        route = routed_points
     else:
-        start = start_hint
+        if source_node is not None:
+            toward = end_hint if target_node is None else (target_node.cx, target_node.cy)
+            start = anchor_point(source_node, toward, str(source_port) if source_port else None)
+        else:
+            start = start_hint
 
-    if target_node is not None:
-        toward = start_hint if source_node is None else (source_node.cx, source_node.cy)
-        end = anchor_point(target_node, toward, str(target_port) if target_port else None)
-    else:
-        end = end_hint
+        if target_node is not None:
+            toward = start_hint if source_node is None else (source_node.cx, source_node.cy)
+            end = anchor_point(target_node, toward, str(target_port) if target_port else None)
+        else:
+            end = end_hint
 
-    obstacles = list(route_obstacles)
-    if source_node is not None:
-        obstacles = [bounds for bounds in obstacles if bounds != source_node.bounds]
-    if target_node is not None:
-        obstacles = [bounds for bounds in obstacles if bounds != target_node.bounds]
+        obstacles = list(route_obstacles)
+        if source_node is not None:
+            obstacles = [bounds for bounds in obstacles if bounds != source_node.bounds]
+        if target_node is not None:
+            obstacles = [bounds for bounds in obstacles if bounds != target_node.bounds]
 
-    route = build_orthogonal_route(start, end, obstacles, arrow)
+        route = build_orthogonal_route(start, end, obstacles, arrow)
     path_d = "M " + " L ".join(f"{round(x, 2)},{round(y, 2)}" for x, y in route)
     color = color_for_flow(style, arrow)
     width = to_float(arrow.get("stroke_width", style_value(style, "arrow_width")))
@@ -1140,7 +1159,40 @@ def render_footer(data: Dict[str, object], style: Dict[str, object], width: floa
     return f'  <text x="{x}" y="{y}" class="footnote">{normalize_text(text)}</text>'
 
 
+def should_use_external_router(data: Dict[str, object]) -> bool:
+    routing = data.get("routing", {})
+    if data.get("auto_layout") is True:
+        return True
+    if isinstance(routing, dict) and str(routing.get("engine", "")).lower() == "elk":
+        return True
+    return False
+
+
+def route_with_elk(data: Dict[str, object]) -> Dict[str, object]:
+    if not should_use_external_router(data):
+        return data
+    if shutil.which("node") is None:
+        print("Warning: node not found; using built-in router", file=sys.stderr)
+        return data
+
+    router_path = os.path.join(SCRIPT_DIR, "route-diagram.mjs")
+    try:
+        completed = subprocess.run(
+            ["node", router_path],
+            input=json.dumps(data),
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        return json.loads(completed.stdout)
+    except (subprocess.CalledProcessError, json.JSONDecodeError) as exc:
+        detail = exc.stderr.strip() if isinstance(exc, subprocess.CalledProcessError) else str(exc)
+        print(f"Warning: ELK routing failed; using built-in router: {detail}", file=sys.stderr)
+        return data
+
+
 def build_svg(template_type: str, data: Dict[str, object]) -> str:
+    data = route_with_elk(data)
     style_index, style = parse_style(data.get("style"))
     if data.get("style_overrides"):
         style.update(data["style_overrides"])

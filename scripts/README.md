@@ -1,6 +1,6 @@
 # SVG Tech Graph - Scripts
 
-这些脚本用于稳定生成、验证并导出使用内建默认视觉系统的技术图。
+这些脚本用于稳定生成、自动布线、验证并导出使用内建默认视觉系统的技术图。
 
 ## 脚本列表
 
@@ -26,7 +26,22 @@
 - 旧的 `-s/--style` 参数仅为兼容保留并会被忽略
 - 这个脚本不负责生成 SVG 内容，只负责验证和导出
 
-### 3. `generate-from-template.py`
+### 3. `route-diagram.mjs`
+
+使用 ELK 对节点边图做自动布局和正交布线。
+
+```bash
+node ./route-diagram.mjs ../fixtures/mq-routing.json > /tmp/mq-routed.json
+```
+
+说明：
+
+- 需要安装 npm 依赖：`npm install`
+- 输入为现有 JSON 结构，输出为补齐 `x` / `y` / `routed_points` 的 JSON
+- 当 JSON 设置 `auto_layout: true` 或 `routing.engine: "elk"` 时，`generate-from-template.py` 会自动调用它
+- 手写 `route_points` / `routed_points` 的箭头不会被覆盖
+
+### 4. `generate-from-template.py`
 
 基于 JSON 结构和内建默认视觉系统生成 SVG。
 
@@ -49,9 +64,11 @@ python3 ./generate-from-template.py architecture ./output/arch.svg '{
 - `arrows[].flow`
 - `source_port` / `target_port`
 - `route_points`
+- `routed_points`
+- `routing.engine`
 - `style_overrides`
 
-### 4. `test-default-visual-system.sh`
+### 5. `test-default-visual-system.sh`
 
 运行 Claude 风格回归测试。
 

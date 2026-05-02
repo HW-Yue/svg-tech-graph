@@ -3,6 +3,14 @@
   "version": "1.0.4",
   "description": "Generate production-quality SVG technical diagrams in the built-in default visual system and export as SVG+PNG via rsvg-convert.",
   "main": "SKILL.md",
+  "type": "module",
+  "scripts": {
+    "route": "node scripts/route-diagram.mjs",
+    "test": "bash scripts/test-default-visual-system.sh"
+  },
+  "dependencies": {
+    "elkjs": "^0.9.3"
+  },
   "keywords": [
     "claude-code",
     "skill",
