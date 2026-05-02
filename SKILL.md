@@ -6,6 +6,10 @@ description: >-
   SVG+PNG. Trigger on: "画图" "帮我画" "生成图" "做个图" "架构图" "流程图"
   "可视化一下" "出图" "generate diagram" "draw diagram" "visualize" or any
   system/flow description the user wants illustrated.
+user-invocable: true
+argument-hint: "[diagram description or source files]"
+metadata:
+  short-description: Generate routed SVG technical diagrams
 ---
 
 # SVG Tech Graph
